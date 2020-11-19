@@ -41,5 +41,22 @@
             </plugin>
         </plugins>
     </build>
+    <url>https://github.com/miniman42/hibernate-utilities</url>
 
+    <scm>
+        <connection>scm:git:git://github.com/miniman42/hibernate-utilities.git</connection>
+        <developerConnection>scm:git:ssh://github.com:miniman42/hibernate-utilities.git</developerConnection>
+        <url>http://github.com/miniman42/hibernate-utilities/tree/main</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>https://build.tickerfit.com/nexus/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>https://build.tickerfit.com/nexus/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
 </project>
