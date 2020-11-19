@@ -31,7 +31,6 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.OptimizerFactory;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -311,7 +310,7 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
 
         String numberFormat = ConfigurationHelper.getString(NUMBER_FORMAT_PARAM, params, NUMBER_FORMAT_DEFAULT).replace("%", "%2$");
 
-        this.sequenceValueFormat = "%1$-" + numberFormat;
+        this.sequenceValueFormat = "%1$s-" + numberFormat;
 
         //ignore provided type as it will be based on a String field and we want to generate Longs.
         identifierType = LongType.INSTANCE;
