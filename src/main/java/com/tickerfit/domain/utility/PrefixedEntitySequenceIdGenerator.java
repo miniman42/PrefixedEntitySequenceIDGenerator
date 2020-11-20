@@ -453,8 +453,10 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
     @Override
     public Serializable generate(SharedSessionContractImplementor session,
                                  Object object) throws HibernateException {
-        String groupRef =((EntityGroupingIdentifier)object).getEntityReferenceGroupPrefix();
-        Serializable id = generateOriginal(session, object,groupRef);
+        EntityGroupingIdentifier gid =(EntityGroupingIdentifier)object;
+        String groupRef = gid.getEntityReferenceGroupPrefix();
+        String segmentRef = gid.getEntityReferenceGroupDiscriminator()+groupRef;
+        Serializable id = generateOriginal(session, object, segmentRef);
         return String.format(sequenceValueFormat,groupRef,id);
     }
 

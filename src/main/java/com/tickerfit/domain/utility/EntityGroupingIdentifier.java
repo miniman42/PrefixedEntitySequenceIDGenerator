@@ -20,4 +20,8 @@ public interface EntityGroupingIdentifier {
 
      */
     String getEntityReferenceGroupPrefix();
+
+    default String getEntityReferenceGroupDiscriminator(){
+        return "";
+    }
 }
