@@ -52,11 +52,11 @@
     <distributionManagement>
         <snapshotRepository>
             <id>nexus-snapshots</id>
-            <url>https://build.tickerfit.com/nexus/repository/maven-snapshots/</url>
+            <url>https://build.innerstrength.health/nexus/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>nexus-releases</id>
-            <url>https://build.tickerfit.com/nexus/repository/maven-releases/</url>
+            <url>https://build.innerstrength.health/nexus/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 </project>
