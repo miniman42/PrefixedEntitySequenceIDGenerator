@@ -17,6 +17,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -40,10 +41,10 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
+
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -54,6 +55,7 @@ import java.sql.Types;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
+import org.jboss.logging.Logger;
 
 /**
  * An modified version of the enhanced version of table-based id generation provided by
@@ -209,10 +211,7 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
     private Optimizer optimizer;
     private long accessCount;
 
-    @Override
-    public Object generatorKey() {
-        return qualifiedTableName.render();
-    }
+    private String contributor;
 
     /**
      * Type mapping for the identifier.
@@ -312,9 +311,6 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
 
         this.sequenceValueFormat = "%1$s-" + numberFormat;
 
-        //ignore provided type as it will be based on a String field and we want to generate Longs.
-        identifierType = LongType.INSTANCE;
-
         final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
         qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment );
@@ -329,12 +325,21 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
             params,
             OptimizerFactory.determineImplicitOptimizerName( incrementSize, params )
         );
+
+//        final BasicTypeRegistry basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
+
         optimizer = OptimizerFactory.buildOptimizer(
             optimizationStrategy,
-            identifierType.getReturnedClass(),
+//            basicTypeRegistry.resolve( StandardBasicTypes.LONG ).getReturnedClass(),
+            Long.class, //ignore provided type as it will be based on a String field and we want to generate Longs.
             incrementSize,
             ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
         );
+
+        contributor = params.getProperty( CONTRIBUTOR_NAME );
+        if ( contributor == null ) {
+            contributor = "orm";
+        }
     }
 
     /**
@@ -589,21 +594,6 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
     }
 
     @Override
-    public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-        return new String[] {
-            dialect.getCreateTableString() + ' ' + renderedTableName + " ( "
-                + segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) + " not null "
-                + ", " + valueColumnName + ' ' + dialect.getTypeName( Types.BIGINT )
-                + ", primary key ( " + segmentColumnName + " ) )" + dialect.getTableTypeString()
-        };
-    }
-
-    @Override
-    public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-        return new String[] { dialect.getDropTableString( renderedTableName ) };
-    }
-
-    @Override
     public void registerExportables(Database database) {
         final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
@@ -614,15 +604,22 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
 
         Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
         if ( table == null ) {
-            table = namespace.createTable( qualifiedTableName.getObjectName(), false );
+            table = namespace.createTable(
+                    qualifiedTableName.getObjectName(),
+                    (identifier) -> new Table( contributor, namespace, identifier, false )
+            );
+
+            final BasicTypeRegistry basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
 
             // todo : note sure the best solution here.  do we add the columns if missing?  other?
             final Column segmentColumn = new ExportableColumn(
                 database,
                 table,
                 segmentColumnName,
-                StringType.INSTANCE,
-                dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
+                basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
+                database.getTypeConfiguration()
+                        .getDdlTypeRegistry()
+                        .getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) )
             );
             segmentColumn.setNullable( false );
             table.addColumn( segmentColumn );
@@ -635,7 +632,7 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
                 database,
                 table,
                 valueColumnName,
-                LongType.INSTANCE
+                basicTypeRegistry.resolve( StandardBasicTypes.LONG )
             );
             table.addColumn( valueColumn );
         }
