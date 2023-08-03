@@ -192,8 +192,6 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
 
     private String sequenceValueFormat;
 
-    private Type identifierType;
-
     private QualifiedName qualifiedTableName;
     private String renderedTableName;
 
@@ -212,15 +210,6 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
     private long accessCount;
 
     private String contributor;
-
-    /**
-     * Type mapping for the identifier.
-     *
-     * @return The identifier type mapping.
-     */
-    public final Type getIdentifierType() {
-        return identifierType;
-    }
 
     /**
      * The name of the table in which we store this generator's persistent state.
@@ -452,7 +441,7 @@ public class PrefixedEntitySequenceIdGenerator implements PersistentIdentifierGe
     }
 
     private IntegralDataTypeHolder makeValue() {
-        return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+        return IdentifierGeneratorHelper.getIntegralDataTypeHolder( Long.class );
     }
 
     @Override

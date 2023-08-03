@@ -8,6 +8,7 @@ package com.tickerfit.domain.utility;
 
 public interface EntityGroupingIdentifier {
 
+
     /*
     EXAMPLE Implementation:
     return someInstanceSpecificGroupingValue; // e.g. return (gender=="MALE")?"MAN":"WOMAN"
